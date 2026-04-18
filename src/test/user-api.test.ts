@@ -9,6 +9,7 @@ import {
   resetDatabase,
 } from "./test-utils";
 
+// Asserts the standard Elysia body-validation error shape.
 function expectValidationError(json: Record<string, unknown>) {
   expect(json).toEqual(
     expect.objectContaining({
@@ -19,6 +20,7 @@ function expectValidationError(json: Record<string, unknown>) {
   );
 }
 
+// Asserts the standard unauthorized response returned by protected routes.
 function expectUnauthorized(json: Record<string, unknown>) {
   expect(json).toEqual({
     error: "Unauthorized",
@@ -126,7 +128,7 @@ describe("user api", () => {
       const session = await findSessionByToken(json.token as string);
 
       expect(session).not.toBeUndefined();
-      expect(session?.token).toBe(json.token);
+      expect(session?.token).toBe(json.token as string);
     });
 
     test("should reject unknown email", async () => {

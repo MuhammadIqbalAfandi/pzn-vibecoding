@@ -11,6 +11,7 @@ app.listen({
 
 console.log(`Server listening on http://${env.host}:${env.port} (${env.nodeEnv})`);
 
+// Gracefully stops the database client before exiting the process.
 const shutdown = async () => {
   await closeDatabaseConnection();
   process.exit(0);
