@@ -248,7 +248,7 @@ export async function getCurrentUser(token: string) {
       id: user.id,
       name: user.name,
       email: user.email,
-      created_at: user.createdAt,
+      created_at: user.createdAt.toISOString(),
     },
   };
 }

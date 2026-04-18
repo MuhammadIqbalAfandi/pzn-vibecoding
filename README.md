@@ -10,6 +10,7 @@ This project already provides:
 - user login
 - get current authenticated user
 - user logout with session invalidation
+- generated OpenAPI documentation with Swagger UI
 
 ## App Overview
 
@@ -21,6 +22,7 @@ The app is organized as a small layered backend:
 - `src/service/` contains the main business logic for authentication.
 - `src/db/` contains the database client and schema definition.
 - `src/config/` contains environment configuration.
+- `src/config/openapi.ts` contains Swagger/OpenAPI documentation configuration.
 - `src/test/` contains API tests and shared test helpers.
 - `drizzle/` stores generated SQL migrations and migration metadata.
 
@@ -93,11 +95,13 @@ Main stack used in this project:
 - `Drizzle Kit` for generating and running migrations
 - `PostgreSQL` as the relational database
 - `postgres` (`postgres.js`) as the PostgreSQL driver
+- `@elysiajs/openapi` for generated OpenAPI docs and Swagger UI
 
 ## Libraries Used
 
 Dependencies from `package.json`:
 
+- `@elysiajs/openapi`
 - `elysia`
 - `drizzle-orm`
 - `postgres`
@@ -337,6 +341,29 @@ Possible errors:
 
 - `401` if token is missing, invalid, expired, or already logged out
 
+## Swagger / OpenAPI
+
+This project now exposes generated API documentation from the Elysia route schemas.
+
+Documentation endpoints:
+
+- `GET /swagger` for the Swagger UI page
+- `GET /swagger/json` for the generated OpenAPI JSON document
+
+Swagger/OpenAPI details:
+
+- docs are generated automatically from route `body`, `response`, and `detail` metadata
+- protected endpoints are marked with bearer authentication requirements
+- request and response examples are included for the auth endpoints
+
+How to use it:
+
+1. Start the app with `bun run dev` or `bun run start`.
+2. Open `http://localhost:3000/swagger`.
+3. Register or log in through the docs UI.
+4. Copy the returned token.
+5. Use the `Authorize` button or the bearer auth input for protected endpoints.
+
 ## Authentication Implementation
 
 Authentication in this project works like this:
@@ -422,6 +449,12 @@ http://localhost:3000
 ```
 
 If `APP_HOST=0.0.0.0`, you can also access it from your local network depending on your environment.
+
+Swagger UI is available at:
+
+```text
+http://localhost:3000/swagger
+```
 
 ## Testing
 

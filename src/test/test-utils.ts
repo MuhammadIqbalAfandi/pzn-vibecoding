@@ -6,7 +6,7 @@ import { sessions, users } from "../db/schema";
 
 type RequestOptions = {
   method?: string;
-  headers?: HeadersInit;
+  headers?: Record<string, string>;
   body?: unknown;
 };
 

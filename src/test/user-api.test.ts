@@ -128,7 +128,7 @@ describe("user api", () => {
       const session = await findSessionByToken(json.token as string);
 
       expect(session).not.toBeUndefined();
-      expect(session?.token).toBe(json.token);
+      expect(session?.token).toBe(json.token as string);
     });
 
     test("should reject unknown email", async () => {
