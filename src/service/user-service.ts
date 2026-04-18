@@ -45,20 +45,24 @@ export class UnauthorizedError extends Error {
   }
 }
 
+// Encodes plain text as base64url for token header and payload segments.
 function toBase64Url(value: string): string {
   return Buffer.from(value).toString("base64url");
 }
 
+// Decodes a base64url token segment back into a UTF-8 string.
 function fromBase64Url(value: string): string {
   return Buffer.from(value, "base64url").toString("utf8");
 }
 
+// Creates the HMAC signature used to protect the token contents.
 function createTokenSignature(encodedHeader: string, encodedPayload: string): string {
   return createHmac("sha256", env.authTokenSecret)
     .update(`${encodedHeader}.${encodedPayload}`)
     .digest("base64url");
 }
 
+// Builds a signed auth token from the normalized payload data.
 function signToken(payload: AuthTokenPayload): string {
   const header = {
     alg: "HS256",
@@ -72,6 +76,7 @@ function signToken(payload: AuthTokenPayload): string {
   return `${encodedHeader}.${encodedPayload}.${signature}`;
 }
 
+// Validates token structure, signature, and expiry before returning its payload.
 function verifyToken(token: string): AuthTokenPayload {
   const parts = token.split(".");
 
@@ -130,6 +135,7 @@ function verifyToken(token: string): AuthTokenPayload {
   }
 }
 
+// Persists a newly issued login token as an active session.
 async function createSession(userId: string, token: string, expiresAt: Date) {
   await db.insert(sessions).values({
     userId,
@@ -138,6 +144,7 @@ async function createSession(userId: string, token: string, expiresAt: Date) {
   });
 }
 
+// Loads a session and ensures it still exists and has not expired.
 async function getValidSession(token: string) {
   const session = await db.query.sessions.findFirst({
     where: eq(sessions.token, token),
@@ -154,6 +161,7 @@ async function getValidSession(token: string) {
   return session;
 }
 
+// Registers a new user after enforcing unique email and hashing the password.
 export async function registerUser(input: RegisterUserInput) {
   const email = input.email.trim().toLowerCase();
   const name = input.name.trim();
@@ -185,6 +193,7 @@ export async function registerUser(input: RegisterUserInput) {
   };
 }
 
+// Authenticates a user and creates a signed session token for later requests.
 export async function loginUser(input: LoginUserInput) {
   const email = input.email.trim().toLowerCase();
 
@@ -215,6 +224,7 @@ export async function loginUser(input: LoginUserInput) {
   return { token };
 }
 
+// Returns the current user profile when the supplied token is valid and active.
 export async function getCurrentUser(token: string) {
   const payload = verifyToken(token);
   await getValidSession(token);
@@ -243,6 +253,7 @@ export async function getCurrentUser(token: string) {
   };
 }
 
+// Invalidates the supplied token by deleting its stored session record.
 export async function logoutUser(token: string) {
   verifyToken(token);
   await getValidSession(token);

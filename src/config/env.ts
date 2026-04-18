@@ -2,6 +2,7 @@ const requiredVariables = ["DATABASE_URL"] as const;
 
 type RequiredVariable = (typeof requiredVariables)[number];
 
+// Reads a required environment variable and throws early when it is missing.
 function requireEnv(name: RequiredVariable): string {
   const value = Bun.env[name];
 
@@ -12,6 +13,7 @@ function requireEnv(name: RequiredVariable): string {
   return value;
 }
 
+// Parses the configured port and falls back to a default when it is not set.
 function readPort(value: string | undefined, fallback: number): number {
   if (!value) {
     return fallback;

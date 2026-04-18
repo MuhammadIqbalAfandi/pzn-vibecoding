@@ -21,6 +21,7 @@ const loginBody = t.Object({
   password: t.String({ minLength: 8, maxLength: 255 }),
 });
 
+// Extracts a bearer token from the Authorization header or throws when invalid.
 function getBearerToken(authorization: string | undefined): string {
   if (!authorization?.startsWith("Bearer ")) {
     throw new UnauthorizedError();

@@ -3,6 +3,7 @@ import { Elysia } from "elysia";
 import { healthRoutes } from "./routes/health";
 import { userRoutes } from "./routes/user-routes";
 
+// Builds the Elysia application and wires all route modules together.
 export function createApp() {
   return new Elysia()
     .get("/", () => ({
