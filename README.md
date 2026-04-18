@@ -51,6 +51,8 @@ The server starts on `http://localhost:3000` by default.
 - `GET /` simple startup confirmation
 - `GET /health` application health check
 - `GET /health/db` database connectivity check
+- `POST /api/v1/users` register a user
+- `POST /api/v1/users/login` log in a user
 
 ## Database Commands
 
@@ -75,5 +77,6 @@ bun run db:studio
 ## Notes
 
 - Environment settings live in `.env`.
-- The starter schema currently includes an `app_users` table so the migration flow has a real baseline model.
+- Set `AUTH_TOKEN_SECRET` in `.env` so login tokens are signed with your own secret.
+- The baseline schema now includes a `users` table for registration and login.
 - `drizzle.config.ts` reads `DATABASE_URL` from the environment, so make sure it is set before running Drizzle commands.

@@ -31,4 +31,5 @@ export const env = {
   host: Bun.env.APP_HOST ?? "0.0.0.0",
   port: readPort(Bun.env.APP_PORT, 3000),
   databaseUrl: requireEnv("DATABASE_URL"),
+  authTokenSecret: Bun.env.AUTH_TOKEN_SECRET ?? "development-secret-change-me",
 } as const;
