@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 import { env } from "../config/env";
 import { db } from "../db/client";
-import { users } from "../db/schema";
+import { sessions, users } from "../db/schema";
 
 type RegisterUserInput = {
   name: string;
@@ -79,18 +79,15 @@ function verifyToken(token: string): AuthTokenPayload {
     throw new UnauthorizedError();
   }
 
-  const encodedHeader = parts[0];
-  const encodedPayload = parts[1];
-  const receivedSignature = parts[2];
+  const [encodedHeader, encodedPayload, receivedSignature] = parts;
 
   if (!encodedHeader || !encodedPayload || !receivedSignature) {
     throw new UnauthorizedError();
   }
 
   const expectedSignature = createTokenSignature(encodedHeader, encodedPayload);
-
-  const receivedSignatureBuffer = Buffer.from(receivedSignature);
-  const expectedSignatureBuffer = Buffer.from(expectedSignature);
+  const receivedSignatureBuffer = Buffer.from(receivedSignature, "base64url");
+  const expectedSignatureBuffer = Buffer.from(expectedSignature, "base64url");
 
   if (
     receivedSignatureBuffer.length !== expectedSignatureBuffer.length ||
@@ -104,12 +101,11 @@ function verifyToken(token: string): AuthTokenPayload {
       alg?: string;
       typ?: string;
     };
+    const payload = JSON.parse(fromBase64Url(encodedPayload)) as Partial<AuthTokenPayload>;
 
     if (header.alg !== "HS256" || header.typ !== "JWT") {
       throw new UnauthorizedError();
     }
-
-    const payload = JSON.parse(fromBase64Url(encodedPayload)) as Partial<AuthTokenPayload>;
 
     if (
       typeof payload.sub !== "string" ||
@@ -132,6 +128,30 @@ function verifyToken(token: string): AuthTokenPayload {
 
     throw new UnauthorizedError();
   }
+}
+
+async function createSession(userId: string, token: string, expiresAt: Date) {
+  await db.insert(sessions).values({
+    userId,
+    token,
+    expiresAt,
+  });
+}
+
+async function getValidSession(token: string) {
+  const session = await db.query.sessions.findFirst({
+    where: eq(sessions.token, token),
+  });
+
+  if (!session) {
+    throw new UnauthorizedError();
+  }
+
+  if (session.expiresAt.getTime() <= Date.now()) {
+    throw new UnauthorizedError();
+  }
+
+  return session;
 }
 
 export async function registerUser(input: RegisterUserInput) {
@@ -182,18 +202,22 @@ export async function loginUser(input: LoginUserInput) {
     throw new InvalidCredentialsError();
   }
 
+  const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
   const token = signToken({
     sub: user.id,
     email: user.email,
     name: user.name,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+    exp: expiresAt,
   });
+
+  await createSession(user.id, token, new Date(expiresAt * 1000));
 
   return { token };
 }
 
 export async function getCurrentUser(token: string) {
   const payload = verifyToken(token);
+  await getValidSession(token);
 
   const user = await db.query.users.findFirst({
     where: eq(users.id, payload.sub),
@@ -216,5 +240,16 @@ export async function getCurrentUser(token: string) {
       email: user.email,
       created_at: user.createdAt,
     },
+  };
+}
+
+export async function logoutUser(token: string) {
+  verifyToken(token);
+  await getValidSession(token);
+
+  await db.delete(sessions).where(eq(sessions.token, token));
+
+  return {
+    data: "OK" as const,
   };
 }

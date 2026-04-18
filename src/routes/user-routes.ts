@@ -1,11 +1,12 @@
 import { Elysia, t } from "elysia";
 
 import {
-  getCurrentUser,
-  InvalidCredentialsError,
   UnauthorizedError,
+  InvalidCredentialsError,
   UserConflictError,
+  getCurrentUser,
   loginUser,
+  logoutUser,
   registerUser,
 } from "../service/user-service";
 
@@ -76,6 +77,20 @@ export const userRoutes = new Elysia({ prefix: "/api/v1/users" })
       const token = getBearerToken(headers.authorization);
 
       return await getCurrentUser(token);
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        set.status = 401;
+        return { error: error.message };
+      }
+
+      throw error;
+    }
+  })
+  .post("/logout", async ({ headers, set }) => {
+    try {
+      const token = getBearerToken(headers.authorization);
+
+      return await logoutUser(token);
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         set.status = 401;
